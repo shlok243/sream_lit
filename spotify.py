@@ -1,68 +1,33 @@
-import os
-import pygame
-import tkinter as tk
-from tkinter import filedialog
+import streamlit as st
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 
-# Initialize the pygame mixer
-pygame.mixer.init()
+# Replace these with your Spotify API credentials
+client_id = 'YOUR_CLIENT_ID'
+client_secret = 'YOUR_CLIENT_SECRET'
 
-# Define the Music Player class
-class MusicPlayer:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Music Player")
-        self.root.geometry("400x200")
-        
-        self.current_song = ""
-        self.paused = False
-        
-        # Create widgets
-        self.label = tk.Label(root, text="No song loaded", width=40)
-        self.label.pack(pady=10)
-        
-        self.play_button = tk.Button(root, text="Play", command=self.play_music)
-        self.play_button.pack(pady=10)
-        
-        self.pause_button = tk.Button(root, text="Pause", command=self.pause_music)
-        self.pause_button.pack(pady=10)
-        
-        self.stop_button = tk.Button(root, text="Stop", command=self.stop_music)
-        self.stop_button.pack(pady=10)
-        
-        self.load_button = tk.Button(root, text="Load", command=self.load_music)
-        self.load_button.pack(pady=10)
-    
-    def load_music(self):
-        self.current_song = filedialog.askopenfilename(initialdir=".", title="Select a Song",
-                                                       filetypes=(("MP3 Files", "*.mp3"),))
-        if self.current_song:
-            self.label.config(text=os.path.basename(self.current_song))
-            pygame.mixer.music.load(self.current_song)
-            self.paused = False
-    
-    def play_music(self):
-        if self.current_song:
-            if self.paused:
-                pygame.mixer.music.unpause()
-            else:
-                pygame.mixer.music.play()
-            self.paused = False
-    
-    def pause_music(self):
-        if not self.paused:
-            pygame.mixer.music.pause()
-            self.paused = True
-    
-    def stop_music(self):
-        pygame.mixer.music.stop()
-        self.paused = False
-        self.label.config(text="No song loaded")
+# Authenticate
+auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+sp = spotipy.Spotify(auth_manager=auth_manager)
 
-# Create the main window
-root = tk.Tk()
+# Streamlit App
+st.title("Spotify Track Search")
 
-# Initialize the music player
-app = MusicPlayer(root)
+query = st.text_input("Enter the name of the song or artist:")
 
-# Start the Tkinter main loop
-root.mainloop()
+if st.button("Search"):
+    if query:
+        results = sp.search(q=query, type='track', limit=5)
+        if results['tracks']['items']:
+            for idx, track in enumerate(results['tracks']['items']):
+                st.write(f"**Track Name**: {track['name']}")
+                st.write(f"**Artist**: {track['artists'][0]['name']}")
+                st.write(f"**Album**: {track['album']['name']}")
+                st.write(f"[Preview Link]({track['external_urls']['spotify']})")
+                st.write("-" * 50)
+        else:
+            st.write("No tracks found. Please try a different search query.")
+    else:
+        st.write("Please enter a search query.")
+
+st.write("\nSearch for your favorite tracks and get links to listen on Spotify!")
