@@ -3,69 +3,66 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Function to generate recommendations
-def get_recommendations(age, screen_time, device, symptoms, lifestyle, stress_level, eye_exam_freq):
-    recommendations = []
+# Function to perform diagnosis based on user inputs
+def diagnose(screen_time, device, lifestyle_factors):
+    # Diagnosis logic (placeholder)
+    results = {
+        "visual_stress": "Low",
+        "eye_strain": "Medium",
+        "risk_of_macular_degeneration": "High" if screen_time > 4 else "Low",
+        "recommendations": []
+    }
     
-    if age < 40:
-        recommendations.append("Focus on protecting eyes from blue light and reducing visual stress.")
-    elif age < 60:
-        recommendations.append("Consider regular eye exams and managing age-related vision changes.")
-    else:
-        recommendations.append("Emphasize managing chronic conditions and frequent eye check-ups.")
+    if lifestyle_factors['sleep'] < 6:
+        results['recommendations'].append("Increase sleep duration to at least 7-8 hours.")
     
-    if screen_time > 4:
-        recommendations.append("Limit screen time and take regular breaks.")
+    if lifestyle_factors['diet'] < 5:
+        results['recommendations'].append("Improve diet with more fruits and vegetables.")
     
-    if device == 'Mobile':
-        recommendations.append("Use blue light filtering apps and maintain proper viewing distance.")
+    if lifestyle_factors['exercise'] < 30:
+        results['recommendations'].append("Increase physical activity to at least 30 minutes a day.")
     
-    if 'Sore eyes' in symptoms:
-        recommendations.append("Ensure proper lighting and take frequent breaks.")
+    if device == 'mobile':
+        results['recommendations'].append("Consider using blue light filtering glasses.")
     
-    if lifestyle.get('Sun Exposure') == 'High':
-        recommendations.append("Wear UV-protective sunglasses and use sunscreen around eyes.")
-    
-    if lifestyle.get('Smoking') == 'Yes':
-        recommendations.append("Quit smoking to reduce risk of AMD and cataracts.")
-    
-    if stress_level > 7:
-        recommendations.append("Consider using anti-reflective lenses and adjust your workspace lighting.")
-    
-    return recommendations
+    return results
 
 # Streamlit UI
-st.title("Advanced Vision Health Diagnosis")
-st.sidebar.header("User Input")
+st.title('Advanced Vision Diagnosis App')
+st.write("This app provides a detailed diagnosis based on your screen time habits and lifestyle factors.")
 
-# Collect user inputs
-age = st.sidebar.slider("Age", 1, 100, 30)
-screen_time = st.sidebar.slider("Daily Screen Time (hours)", 0, 12, 4)
-device = st.sidebar.selectbox("Primary Device", ["Mobile", "Laptop", "Television"])
-symptoms = st.sidebar.multiselect("Eye Symptoms", ["Sore eyes", "Tired eyes", "Headaches", "Dry eyes", "Sensitivity to light"])
-lifestyle = {
-    'Sun Exposure': st.sidebar.selectbox("Sun Exposure", ["Low", "Moderate", "High"]),
-    'Smoking': st.sidebar.selectbox("Do you smoke?", ["Yes", "No"]),
-    'Exercise': st.sidebar.selectbox("Exercise Frequency", ["None", "Rarely", "Regularly"]),
-    'Diet': st.sidebar.selectbox("Balanced Diet", ["Yes", "No"])
-}
-stress_level = st.sidebar.slider("Visual Stress Level (1-10)", 1, 10, 5)
-eye_exam_freq = st.sidebar.selectbox("Eye Exam Frequency", ["Annually", "Every 2 years", "Rarely"])
+# Input fields
+screen_time = st.slider('Average daily screen time (hours):', min_value=0, max_value=24, value=2)
+device = st.selectbox('Primary device used:', ['mobile', 'laptop', 'television'])
+age = st.slider('Age:', min_value=0, max_value=100, value=25)
 
-# Generate recommendations
-if st.sidebar.button("Get Diagnosis"):
-    recommendations = get_recommendations(age, screen_time, device, symptoms, lifestyle, stress_level, eye_exam_freq)
-    st.subheader("Your Diagnosis")
-    for rec in recommendations:
-        st.write(f"- {rec}")
+# Lifestyle factors
+st.subheader('Lifestyle Factors')
+sleep = st.slider('Average sleep duration per night (hours):', min_value=0, max_value=24, value=8)
+diet = st.slider('Average servings of fruits and vegetables per day:', min_value=0, max_value=10, value=5)
+exercise = st.slider('Average exercise duration per week (minutes):', min_value=0, max_value=600, value=150)
 
-# Plot example (replace with relevant data and charts)
-st.subheader("Sample Data Visualization")
-data = pd.DataFrame({
-    'Age': [25, 35, 45, 55, 65],
-    'Screen Time': [2, 4, 6, 8, 10],
-    'Visual Stress': [3, 5, 7, 8, 9]
-})
-fig, ax = plt.subplots()
-sns.lineplot(data=data, x='Age', y='Visual Stress', hue='Screen Time', marker='o', ax=ax)
-st.pyplot(fig)
+# Perform diagnosis when button is pressed
+if st.button('GIVE SOLUTION'):
+    lifestyle_factors = {
+        'sleep': sleep,
+        'diet': diet,
+        'exercise': exercise
+    }
+    diagnosis = diagnose(screen_time, device, lifestyle_factors)
+    
+    st.write("## Diagnosis Results")
+    st.write(f"Visual Stress: {diagnosis['visual_stress']}")
+    st.write(f"Eye Strain: {diagnosis['eye_strain']}")
+    st.write(f"Risk of Macular Degeneration: {diagnosis['risk_of_macular_degeneration']}")
+    
+    st.write("## Recommendations")
+    for recommendation in diagnosis['recommendations']:
+        st.write(f"- {recommendation}")
+    
+    # Plotting
+    fig, ax = plt.subplots()
+    sns.barplot(x=list(diagnosis.keys()), y=[1]*len(diagnosis.keys()), ax=ax)
+    ax.set_title('Diagnosis Summary')
+    ax.set_ylabel('Severity')
+    st.pyplot(fig)
